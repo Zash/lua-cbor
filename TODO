@@ -1,1 +1,5 @@
 Implement CBOR in/for Lua
+* Encoder
+	* Floats
+	* UTF-8 text
+* Decoder
