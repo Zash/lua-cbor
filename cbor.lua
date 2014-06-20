@@ -26,7 +26,7 @@ local function integer(num, m)
 		-- negative integer, major type 1
 		num, m  = - num - 1, 32
 	end
-	if num < 32 then
+	if num < 24 then
 		return s_char(m + num);
 	elseif num < 2^8 then
 		return s_char(m + 24, num);
