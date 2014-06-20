@@ -8,6 +8,10 @@ local pairs = pairs;
 local s_byte = string.byte;
 local s_char = string.char;
 local t_concat = table.concat;
+local m_floor = math.floor;
+local m_abs = math.abs;
+local m_huge = math.huge;
+local m_frexp = math.frexp;
 
 local types = {};
 
@@ -54,7 +58,37 @@ end
 
 -- Major type 7
 local function float(num)
-	error "not implemented";
+	local sign = (num > 0 or 1 / num > 0) and 0 or 1
+	if num ~= num then
+		return "\127\255\255\255\255\255\255\255"
+	end
+	num = m_abs(num)
+	if num == m_huge then
+		return s_char(sign * 2^7 + 2^7 - 1) .. "\240\0\0\0\0\0\0"
+	end
+	local fraction, exponent = m_frexp(num)
+	if fraction == 0 then
+		return s_char(sign * 2^7) .. "\0\0\0\0\0\0\0"
+	end
+	fraction = fraction * 2
+	exponent = exponent + 2^10 - 2
+	if exponent <= 0 then
+		fraction = fraction * 2 ^ (exponent - 1)
+		exponent = 0
+	else
+		fraction = fraction - 1
+	end
+	return s_char(251,
+		sign * 2^7 + m_floor(exponent / 2^4) % 2^7,
+		exponent % 2^4 * 2^4 +
+		m_floor(fraction * 2^4  % 0x100),
+		m_floor(fraction * 2^12 % 0x100),
+		m_floor(fraction * 2^20 % 0x100),
+		m_floor(fraction * 2^28 % 0x100),
+		m_floor(fraction * 2^36 % 0x100),
+		m_floor(fraction * 2^44 % 0x100),
+		m_floor(fraction * 2^52 % 0x100)
+	)
 end
 
 -- Major types 0, 1 and 7
