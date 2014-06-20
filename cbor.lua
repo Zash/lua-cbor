@@ -59,7 +59,7 @@ end
 
 -- Major types 0, 1 and 7
 function types.number(num)
-	if num % 1 == 0 then
+	if num % 1 == 0 and num <= 9007199254740991 and num >= -9007199254740991 then
 		-- Major type 0 and 1
 		return integer(num, 0);
 	end
