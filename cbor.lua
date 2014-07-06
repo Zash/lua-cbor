@@ -3,6 +3,8 @@
 
 local bit = require"bit";
 local b_rshift = bit.rshift;
+local b_lshift = bit.lshift;
+local band = bit.band;
 local type = type;
 local pairs = pairs;
 local s_byte = string.byte;
@@ -139,11 +141,57 @@ function types.table(t)
 end
 
 types["function"] = function()
-	error "can't encode function"
+	error "can't encode function";
+end
+
+local function _readlen(data, mintyp, pos)
+	if mintyp <= 0x17 then
+		return mintyp, pos+1;
+	elseif mintyp <= 0x1b then
+		local out = 0;
+		pos = pos + 1;
+		for i = 1, 2^(mintyp-0x18) do
+			out, pos = out * 256 + data:byte(pos), pos + 1;
+		end
+		return out, pos;
+	end
+end
+
+local function decode(data, pos)
+	pos = pos or 1;
+	local typ, mintyp = data:byte(pos);
+	typ, mintyp = b_rshift(typ, 5), typ % 0x20;
+	if typ == 0 then
+		return _readlen(data, mintyp, pos);
+	elseif typ == 1 then
+		mintyp, pos = _readlen(data, mintyp, pos);
+		return -1 - mintyp, pos;
+	elseif typ == 2 or typ == 3 then
+		mintyp, pos = _readlen(data, mintyp, pos);
+		return data:sub(pos, pos+mintyp-1), pos+mintyp;
+	elseif typ == 4 then
+		local out = {};
+		mintyp, pos = _readlen(data, mintyp, pos);
+		for i = 1, mintyp do
+			out[i], pos = decode(data, pos);
+		end
+		return out, pos;
+	elseif typ == 5 then
+		local out, key = {};
+		mintyp, pos = _readlen(data, mintyp, pos);
+		for i = 1, mintyp do
+			key, pos = decode(data, pos)
+			out[key], pos = decode(data, pos);
+		end
+		return out, pos;
+	end
+	-- TODO Tagged types and floats
+	error(("Decoding major type %d is not implemented"):format(typ));
 end
 
 return {
 	encode = encode;
+	decode = decode;
 	types = types;
 	null = null;
 };
