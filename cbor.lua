@@ -205,6 +205,18 @@ local function decode(data, pos)
 			out[key], pos = decode(data, pos);
 		end
 		return out, pos;
+	elseif typ == 7 then
+		mintyp, pos = _readlen(data, mintyp, pos);
+		if mintyp == 20 then
+			return false, pos;
+		elseif mintyp == 21 then
+			return true, pos;
+		elseif mintyp == 22 then
+			return null, pos;
+		elseif mintyp == 23 then
+			return undefined, pos;
+		end
+		error(("Decoding major type %d, minor type %d is not implemented"):format(typ, mintyp));
 	end
 	-- TODO Tagged types and floats
 	error(("Decoding major type %d is not implemented"):format(typ));
