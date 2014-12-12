@@ -102,10 +102,10 @@ function types.number(num)
 	return float(num);
 end
 
--- Major type 3 - byte strings
+-- Major type 2 - byte strings
 function types.string(s)
 	-- TODO Check for UTF-8 and use major type 3
-	return integer(#s, 96) .. s;
+	return integer(#s, 64) .. s;
 end
 
 function types.boolean(bool)
