@@ -109,7 +109,7 @@ function types.string(s)
 end
 
 function types.boolean(bool)
-	return bool and "\244" or "\245";
+	return bool and "\245" or "\244";
 end
 
 types["nil"] = function() return "\246"; end
