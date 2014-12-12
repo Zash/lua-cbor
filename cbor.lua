@@ -171,6 +171,14 @@ local function decode(data, pos)
 		return data:sub(pos, pos+mintyp-1), pos+mintyp;
 	elseif typ == 4 then
 		local out = {};
+		if mintyp == 31 then
+			local i = 1;
+			while data:byte(pos) ~= 0xff do
+				out[i], pos = decode(data, pos);
+				i = i + 1;
+			end
+			return out, pos;
+		end
 		mintyp, pos = _readlen(data, mintyp, pos);
 		for i = 1, mintyp do
 			out[i], pos = decode(data, pos);
@@ -178,6 +186,13 @@ local function decode(data, pos)
 		return out, pos;
 	elseif typ == 5 then
 		local out, key = {};
+		if mintyp == 31 then
+			while data:byte(pos) ~= 0xff do
+				key, pos = decode(data, pos)
+				out[key], pos = decode(data, pos);
+			end
+			return out, pos;
+		end
 		mintyp, pos = _readlen(data, mintyp, pos);
 		for i = 1, mintyp do
 			key, pos = decode(data, pos)
