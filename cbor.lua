@@ -21,6 +21,10 @@ local null = newproxy(); -- explicit null
 debug.setmetatable(null, {
 	__tostring = function() return "null"; end
 });
+local undefined = newproxy();
+debug.setmetatable(undefined, {
+	__tostring = function() return "undefined"; end
+});
 
 local function encode(obj)
 	return types[type(obj)](obj);
@@ -117,6 +121,8 @@ types["nil"] = function() return "\246"; end
 function types.userdata(ud)
 	if ud == null then
 		return "\246";
+	elseif ud == undefined then
+		return "\247";
 	end
 	-- TODO metamethod?
 	error "can't encode userdata"
@@ -209,4 +215,5 @@ return {
 	decode = decode;
 	types = types;
 	null = null;
+	undefined = undefined;
 };
