@@ -171,6 +171,14 @@ local function decode(data, pos)
 		mintyp, pos = _readlen(data, mintyp, pos);
 		return -1 - mintyp, pos;
 	elseif typ == 2 or typ == 3 then
+		if mintyp == 31 then
+			local out, i = {}, 1;
+			pos = pos + 1;
+			while s_byte(data, pos) ~= 0xff do
+				i, out[i], pos = i+1, decode(data, pos);
+			end
+			return t_concat(out), pos+1;
+		end
 		mintyp, pos = _readlen(data, mintyp, pos);
 		return data:sub(pos, pos+mintyp-1), pos+mintyp;
 	elseif typ == 4 then
