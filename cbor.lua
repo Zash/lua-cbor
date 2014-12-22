@@ -177,11 +177,12 @@ local function decode(data, pos)
 		local out = {};
 		if mintyp == 31 then
 			local i = 1;
+			pos = pos + 1;
 			while s_byte(data, pos) ~= 0xff do
 				out[i], pos = decode(data, pos);
 				i = i + 1;
 			end
-			return out, pos;
+			return out, pos + 1;
 		end
 		mintyp, pos = _readlen(data, mintyp, pos);
 		for i = 1, mintyp do
@@ -191,11 +192,12 @@ local function decode(data, pos)
 	elseif typ == 5 then
 		local out, key = {};
 		if mintyp == 31 then
+			pos = pos + 1;
 			while s_byte(data, pos) ~= 0xff do
 				key, pos = decode(data, pos)
 				out[key], pos = decode(data, pos);
 			end
-			return out, pos;
+			return out, pos + 1;
 		end
 		mintyp, pos = _readlen(data, mintyp, pos);
 		for i = 1, mintyp do
