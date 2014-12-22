@@ -3,8 +3,6 @@
 
 local bit = require"bit";
 local b_rshift = bit.rshift;
-local b_lshift = bit.lshift;
-local band = bit.band;
 local type = type;
 local pairs = pairs;
 local s_byte = string.byte;
