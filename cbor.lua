@@ -216,7 +216,7 @@ local function decode(data, pos)
 		elseif mintyp == 23 then
 			return undefined, pos;
 		end
-		error(("Decoding major type %d, minor type %d is not implemented"):format(typ, mintyp));
+		error(("Decoding major type %d, minor type %d is not implemented"):format(typ or -1, mintyp or -1));
 	end
 	-- TODO Tagged types and floats
 	error(("Decoding major type %d is not implemented"):format(typ));
