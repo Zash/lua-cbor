@@ -157,7 +157,7 @@ local function _readlen(data, mintyp, pos)
 		local out = 0;
 		pos = pos + 1;
 		for i = 1, 2^(mintyp-0x18) do
-			out, pos = out * 256 + data:byte(pos), pos + 1;
+			out, pos = out * 256 + s_byte(data, pos), pos + 1;
 		end
 		return out, pos;
 	end
@@ -165,7 +165,7 @@ end
 
 local function decode(data, pos)
 	pos = pos or 1;
-	local typ, mintyp = data:byte(pos);
+	local typ, mintyp = s_byte(data, pos);
 	typ, mintyp = b_rshift(typ, 5), typ % 0x20;
 	if typ == 0 then
 		return _readlen(data, mintyp, pos);
@@ -179,7 +179,7 @@ local function decode(data, pos)
 		local out = {};
 		if mintyp == 31 then
 			local i = 1;
-			while data:byte(pos) ~= 0xff do
+			while s_byte(data, pos) ~= 0xff do
 				out[i], pos = decode(data, pos);
 				i = i + 1;
 			end
@@ -193,7 +193,7 @@ local function decode(data, pos)
 	elseif typ == 5 then
 		local out, key = {};
 		if mintyp == 31 then
-			while data:byte(pos) ~= 0xff do
+			while s_byte(data, pos) ~= 0xff do
 				key, pos = decode(data, pos)
 				out[key], pos = decode(data, pos);
 			end
