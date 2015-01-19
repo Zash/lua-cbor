@@ -23,7 +23,10 @@ local m_floor = math.floor;
 local m_abs = math.abs;
 local m_huge = math.huge;
 local m_max = math.max;
+local maxint = math.maxinteger or 9007199254740992;
+local minint = math.mininteger or -9007199254740992;
 local m_frexp = math.frexp;
+local m_type = math.type or function (n) return n % 1 == 0 and n <= maxint and n >= minint and "integer" or "float" end;
 local b_rshift = softreq("bit32", "rshift") or softreq("bit", "rshift") or
 	dostring"return function(a,b) return a>>b end" or
 	function (a, b) return m_max(0, m_floor(a / (2^b))); end;
@@ -77,8 +80,21 @@ local function integer(num, m)
 	error "int too large";
 end
 
+-- Number types dispatch
+function encoder.number(num)
+	return encoder[m_type(num)](num);
+end
+
+-- Major types 0, 1
+function encoder.integer(num)
+	if num < 0 then
+		return integer(-1-num, 32);
+	end
+	return integer(num, 0);
+end
+
 -- Major type 7
-local function float(num)
+function encoder.float(num)
 	local sign = (num > 0 or 1 / num > 0) and 0 or 1
 	if num ~= num then
 		return "\251\127\255\255\255\255\255\255\255";
@@ -110,15 +126,6 @@ local function float(num)
 		m_floor(fraction * 2^44 % 0x100),
 		m_floor(fraction * 2^52 % 0x100)
 	)
-end
-
--- Major types 0, 1 and 7
-function encoder.number(num)
-	if num % 1 == 0 and num <= 9007199254740991 and num >= -9007199254740991 then
-		-- Major type 0 and 1
-		return integer(num, 0);
-	end
-	return float(num);
 end
 
 -- Major type 2 - byte strings
