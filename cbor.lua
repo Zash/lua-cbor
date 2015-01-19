@@ -13,6 +13,7 @@ local dostring = function (s)
 end
 
 local setmetatable = setmetatable;
+local getmetatable = getmetatable;
 local error = error;
 local type = type;
 local pairs = pairs;
@@ -33,15 +34,6 @@ local b_rshift = softreq("bit32", "rshift") or softreq("bit", "rshift") or
 	function (a, b) return m_max(0, m_floor(a / (2^b))); end;
 
 local encoder = {};
-
-local function static_simple(name)
-	return setmetatable({}, {
-		__tostring = name and function () return name; end;
-	});
-end
-
-local null = static_simple("null", s_char(7 * 32 + 22)); -- explicit null
-local undefined = static_simple("undefined", s_char(7 * 32 + 23)); -- undefined or nil
 
 local function encode(obj)
 	return encoder[type(obj)](obj);
@@ -99,6 +91,29 @@ if s_pack then
 	end
 end
 
+local simple_mt = {};
+function simple_mt:__tostring() return self.name or ("simple(%d)"):format(self.value); end
+function simple_mt:__tocbor() return self.cbor or integer(self.value, 224); end
+
+local function simple(value, name, cbor)
+	if value < 0 or value > 255 then
+		error "simple value out of bounds";
+	end
+	return setmetatable({ value = value, name = name, cbor = cbor }, simple_mt);
+end
+
+local tagged_mt = {};
+function tagged_mt:__tostring() return ("%d(%s)"):format(self.tag, tostring(self.value)); end
+function tagged_mt:__tocbor() return integer(self.tag, 192) .. encode(self.value); end
+
+local function tagged(tag, value)
+	return setmetatable({ tag = tag, value = value }, tagged_mt);
+end
+
+local null = simple(22, "null"); -- explicit null
+local undefined = simple(23, "undefined"); -- undefined or nil
+local BREAK = simple(31, "break", "\255");
+
 -- Number types dispatch
 function encoder.number(num)
 	return encoder[m_type(num)](num);
@@ -155,8 +170,7 @@ end
 
 
 -- Major type 2 - byte strings
-function encoder.string(s)
-	-- TODO Check for UTF-8 and use major type 3
+function encoder.bytestring(s)
 	return integer(#s, 64) .. s;
 end
 
@@ -167,15 +181,17 @@ end
 encoder["nil"] = function() return "\246"; end
 
 function encoder.userdata(ud)
-	-- TODO metamethod?
+	local mt = debug.getmetatable(ud);
+	if mt and mt.__tocbor then
+		return mt.__tocbor(ud);
+	end
 	error "can't encode userdata"
 end
 
 function encoder.table(t)
-	if t == null then
-		return "\246";
-	elseif t == undefined then
-		return "\247";
+	local mt = getmetatable(t);
+	if mt and mt.__tocbor then
+		return mt.__tocbor(t);
 	end
 	local a, m, i, p = { integer(#t, 128) }, { "\191" }, 1, 2;
 	local is_a, ve = true;
@@ -286,4 +302,6 @@ return {
 	type_encoders = encoder;
 	null = null;
 	undefined = undefined;
+	simple = simple;
+	tagged = tagged;
 };
