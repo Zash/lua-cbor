@@ -172,7 +172,7 @@ end
 
 
 -- Major type 2 - byte strings
-function encoder.bytestring(s)
+function encoder.string(s)
 	return integer(#s, 64) .. s;
 end
 
