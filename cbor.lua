@@ -1,8 +1,17 @@
 -- Concise Binary Object Representation (CBOR)
 -- RFC 7049
 
-local bit = require"bit";
-local b_rshift = bit.rshift;
+local function softreq(pkg, field)
+	local ok, mod = pcall(require, pkg);
+	if not ok then return end
+	if field then return mod[field]; end
+	return mod;
+end
+local dostring = function (s)
+	local ok, f = (loadstring or load)(s);
+	if ok then return f(); end
+end
+
 local type = type;
 local pairs = pairs;
 local s_byte = string.byte;
@@ -11,7 +20,11 @@ local t_concat = table.concat;
 local m_floor = math.floor;
 local m_abs = math.abs;
 local m_huge = math.huge;
+local m_max = math.max;
 local m_frexp = math.frexp;
+local b_rshift = softreq("bit32", "rshift") or softreq("bit", "rshift") or
+	dostring"return function(a,b) return a>>b end" or
+	function (a, b) return m_max(0, m_floor(a / (2^b))); end;
 
 local types = {};
 
