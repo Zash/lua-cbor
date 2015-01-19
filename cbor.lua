@@ -12,6 +12,8 @@ local dostring = function (s)
 	if ok then return f(); end
 end
 
+local setmetatable = setmetatable;
+local error = error;
 local type = type;
 local pairs = pairs;
 local s_byte = string.byte;
@@ -28,14 +30,14 @@ local b_rshift = softreq("bit32", "rshift") or softreq("bit", "rshift") or
 
 local types = {};
 
-local null = newproxy(); -- explicit null
-debug.setmetatable(null, {
-	__tostring = function() return "null"; end
-});
-local undefined = newproxy();
-debug.setmetatable(undefined, {
-	__tostring = function() return "undefined"; end
-});
+local function static_simple(name)
+	return setmetatable({}, {
+		__tostring = name and function () return name; end;
+	});
+end
+
+local null = static_simple("null", s_char(7 * 32 + 22)); -- explicit null
+local undefined = static_simple("undefined", s_char(7 * 32 + 23)); -- undefined or nil
 
 local function encode(obj)
 	return types[type(obj)](obj);
@@ -130,16 +132,16 @@ end
 types["nil"] = function() return "\246"; end
 
 function types.userdata(ud)
-	if ud == null then
-		return "\246";
-	elseif ud == undefined then
-		return "\247";
-	end
 	-- TODO metamethod?
 	error "can't encode userdata"
 end
 
 function types.table(t)
+	if t == null then
+		return "\246";
+	elseif t == undefined then
+		return "\247";
+	end
 	local a, m, i, p = { integer(#t, 128) }, { "\191" }, 1, 2;
 	local is_a, ve = true;
 	for k, v in pairs(t) do
