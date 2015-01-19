@@ -28,7 +28,7 @@ local b_rshift = softreq("bit32", "rshift") or softreq("bit", "rshift") or
 	dostring"return function(a,b) return a>>b end" or
 	function (a, b) return m_max(0, m_floor(a / (2^b))); end;
 
-local types = {};
+local encoder = {};
 
 local function static_simple(name)
 	return setmetatable({}, {
@@ -40,7 +40,7 @@ local null = static_simple("null", s_char(7 * 32 + 22)); -- explicit null
 local undefined = static_simple("undefined", s_char(7 * 32 + 23)); -- undefined or nil
 
 local function encode(obj)
-	return types[type(obj)](obj);
+	return encoder[type(obj)](obj);
 end
 
 -- Major types 0, 1 and length encoding for others
@@ -111,7 +111,7 @@ local function float(num)
 end
 
 -- Major types 0, 1 and 7
-function types.number(num)
+function encoder.number(num)
 	if num % 1 == 0 and num <= 9007199254740991 and num >= -9007199254740991 then
 		-- Major type 0 and 1
 		return integer(num, 0);
@@ -120,23 +120,23 @@ function types.number(num)
 end
 
 -- Major type 2 - byte strings
-function types.string(s)
+function encoder.string(s)
 	-- TODO Check for UTF-8 and use major type 3
 	return integer(#s, 64) .. s;
 end
 
-function types.boolean(bool)
+function encoder.boolean(bool)
 	return bool and "\245" or "\244";
 end
 
-types["nil"] = function() return "\246"; end
+encoder["nil"] = function() return "\246"; end
 
-function types.userdata(ud)
+function encoder.userdata(ud)
 	-- TODO metamethod?
 	error "can't encode userdata"
 end
 
-function types.table(t)
+function encoder.table(t)
 	if t == null then
 		return "\246";
 	elseif t == undefined then
@@ -159,7 +159,7 @@ function types.table(t)
 	return t_concat(is_a and a or m);
 end
 
-types["function"] = function()
+encoder["function"] = function()
 	error "can't encode function";
 end
 
@@ -248,7 +248,7 @@ end
 return {
 	encode = encode;
 	decode = decode;
-	types = types;
+	type_encoders = encoder;
 	null = null;
 	undefined = undefined;
 };
