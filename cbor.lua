@@ -62,11 +62,13 @@ local function integer(num, m)
 			b_rshift(num, 8) % 0x100,
 			num % 0x100);
 	elseif num < 2^64 then
+		local high = m_floor(num / 2^32);
+		num = num % 2^32;
 		return s_char(m + 27,
-			b_rshift(num, 56) % 0x100,
-			b_rshift(num, 48) % 0x100,
-			b_rshift(num, 40) % 0x100,
-			b_rshift(num, 32) % 0x100,
+			b_rshift(high, 24) % 0x100,
+			b_rshift(high, 16) % 0x100,
+			b_rshift(high, 8) % 0x100,
+			high % 0x100,
 			b_rshift(num, 24) % 0x100,
 			b_rshift(num, 16) % 0x100,
 			b_rshift(num, 8) % 0x100,
