@@ -27,6 +27,7 @@ local maxint = math.maxinteger or 9007199254740992;
 local minint = math.mininteger or -9007199254740992;
 local m_frexp = math.frexp;
 local m_type = math.type or function (n) return n % 1 == 0 and n <= maxint and n >= minint and "integer" or "float" end;
+local s_pack = string.pack or softreq("struct", "pack");
 local b_rshift = softreq("bit32", "rshift") or softreq("bit", "rshift") or
 	dostring"return function(a,b) return a>>b end" or
 	function (a, b) return m_max(0, m_floor(a / (2^b))); end;
@@ -80,6 +81,24 @@ local function integer(num, m)
 	error "int too large";
 end
 
+if s_pack then
+	function integer(num, m, fmt)
+		m = m or 0;
+		if num < 24 then
+			fmt, m = ">B", m + num;
+		elseif num < 256 then
+			fmt, m = ">BB", m + 24;
+		elseif num < 65536 then
+			fmt, m = ">BI2", m + 25;
+		elseif num < 4294967296 then
+			fmt, m = ">BI4", m + 26;
+		else
+			fmt, m = ">BI8", m + 27;
+		end
+		return s_pack(fmt, m, num);
+	end
+end
+
 -- Number types dispatch
 function encoder.number(num)
 	return encoder[m_type(num)](num);
@@ -127,6 +146,13 @@ function encoder.float(num)
 		m_floor(fraction * 2^52 % 0x100)
 	)
 end
+
+if s_pack then
+	function encoder.float(num)
+		return s_pack(">bd", 251, num);
+	end
+end
+
 
 -- Major type 2 - byte strings
 function encoder.string(s)
