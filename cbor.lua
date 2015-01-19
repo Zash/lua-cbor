@@ -27,8 +27,10 @@ local m_max = math.max;
 local maxint = math.maxinteger or 9007199254740992;
 local minint = math.mininteger or -9007199254740992;
 local m_frexp = math.frexp;
+local m_ldexp = math.ldexp;
 local m_type = math.type or function (n) return n % 1 == 0 and n <= maxint and n >= minint and "integer" or "float" end;
 local s_pack = string.pack or softreq("struct", "pack");
+local s_unpack = string.unpack or softreq("struct", "unpack");
 local b_rshift = softreq("bit32", "rshift") or softreq("bit", "rshift") or
 	dostring"return function(a,b) return a>>b end" or
 	function (a, b) return m_max(0, m_floor(a / (2^b))); end;
@@ -214,92 +216,264 @@ encoder["function"] = function()
 	error "can't encode function";
 end
 
-local function _readlen(data, mintyp, pos)
-	if mintyp <= 0x17 then
-		return mintyp, pos+1;
-	elseif mintyp <= 0x1b then
+local function read_bytes(fh, len)
+	return fh:read(len);
+end
+
+local function read_byte(fh)
+	return fh:read(1):byte();
+end
+
+local function read_length(fh, mintyp)
+	if mintyp < 24 then
+		return mintyp;
+	elseif mintyp < 28 then
 		local out = 0;
-		pos = pos + 1;
-		for i = 1, 2^(mintyp-0x18) do
-			out, pos = out * 256 + s_byte(data, pos), pos + 1;
+		for i = 1, 2^(mintyp-24) do
+			out = out * 256 + read_byte(fh);
 		end
-		return out, pos;
+		return out;
+	else
+		error "invalid length";
 	end
 end
 
-local function decode(data, pos)
-	pos = pos or 1;
-	local typ, mintyp = s_byte(data, pos);
-	typ, mintyp = b_rshift(typ, 5), typ % 0x20;
-	if typ == 0 then
-		return _readlen(data, mintyp, pos);
-	elseif typ == 1 then
-		mintyp, pos = _readlen(data, mintyp, pos);
-		return -1 - mintyp, pos;
-	elseif typ == 2 or typ == 3 then
-		if mintyp == 31 then
-			local out, i = {}, 1;
-			pos = pos + 1;
-			while s_byte(data, pos) ~= 0xff do
-				i, out[i], pos = i+1, decode(data, pos);
-			end
-			return t_concat(out), pos+1;
-		end
-		mintyp, pos = _readlen(data, mintyp, pos);
-		return data:sub(pos, pos+mintyp-1), pos+mintyp;
-	elseif typ == 4 then
-		local out = {};
-		if mintyp == 31 then
-			local i = 1;
-			pos = pos + 1;
-			while s_byte(data, pos) ~= 0xff do
-				out[i], pos = decode(data, pos);
-				i = i + 1;
-			end
-			return out, pos + 1;
-		end
-		mintyp, pos = _readlen(data, mintyp, pos);
-		for i = 1, mintyp do
-			out[i], pos = decode(data, pos);
-		end
-		return out, pos;
-	elseif typ == 5 then
-		local out, key = {};
-		if mintyp == 31 then
-			pos = pos + 1;
-			while s_byte(data, pos) ~= 0xff do
-				key, pos = decode(data, pos)
-				out[key], pos = decode(data, pos);
-			end
-			return out, pos + 1;
-		end
-		mintyp, pos = _readlen(data, mintyp, pos);
-		for i = 1, mintyp do
-			key, pos = decode(data, pos)
-			out[key], pos = decode(data, pos);
-		end
-		return out, pos;
-	elseif typ == 7 then
-		mintyp, pos = _readlen(data, mintyp, pos);
-		if mintyp == 20 then
-			return false, pos;
-		elseif mintyp == 21 then
-			return true, pos;
-		elseif mintyp == 22 then
-			return null, pos;
-		elseif mintyp == 23 then
-			return undefined, pos;
-		end
-		error(("Decoding major type %d, minor type %d is not implemented"):format(typ or -1, mintyp or -1));
+local decoder = {};
+
+local function read_type(fh)
+	local byte = read_byte(fh);
+	return b_rshift(byte, 5), byte % 2^5;
+end
+
+local function read_object(fh)
+	local typ, mintyp = read_type(fh);
+	return decoder[typ](fh, mintyp);
+end
+
+local function read_integer(fh, mintyp)
+	return read_length(fh, mintyp);
+end
+
+local function read_negative_integer(fh, mintyp)
+	return -1 - read_length(fh, mintyp);
+end
+
+local function read_string(fh, mintyp)
+	if mintyp ~= 31 then
+		return read_bytes(fh, read_length(fh, mintyp));
 	end
-	-- TODO Tagged types and floats
-	error(("Decoding major type %d is not implemented"):format(typ));
+	local out = {};
+	local i = 1;
+	local v = read_object(fh);
+	while v ~= BREAK do
+		out[i], i = v, i+1;
+		v = read_object(fh);
+	end
+	return t_concat(out);
+end
+
+local function read_unicode_string(fh, mintyp)
+	return read_string(fh, mintyp);
+	-- local str = read_string(fh, mintyp);
+	-- if have_utf8 and not utf8.len(str) then
+		-- TODO How to handle this?
+	-- end
+	-- return str;
+end
+
+local function read_array(fh, mintyp)
+	local out = {};
+	if mintyp == 31 then
+		local i = 1;
+		local v = read_object(fh);
+		while v ~= BREAK do
+			out[i], i = v, i+1;
+			v = read_object(fh);
+		end
+	else
+		local len = read_length(fh, mintyp);
+		for i = 1, len do
+			out[i] = read_object(fh);
+		end
+	end
+	return out;
+end
+
+local function read_map(fh, mintyp)
+	local out = {};
+	local k;
+	if mintyp == 31 then
+		local i = 1;
+		k = read_object(fh);
+		while k ~= BREAK do
+			out[k], i = read_object(fh), i+1;
+			k = read_object(fh);
+		end
+	else
+		local len = read_length(fh, mintyp);
+		for i = 1, len do
+			k = read_object(fh);
+			out[k] = read_object(fh);
+		end
+	end
+	return out;
+end
+
+local function read_semantic(fh, mintyp)
+	local tag = read_length(fh, mintyp);
+	local value = read_object(fh);
+	return tagged(tag, value);
+end
+
+local function read_half_float(fh)
+	local exponent = read_byte(fh);
+	local fraction = read_byte(fh);
+	local sign = exponent < 128 and 1 or -1; -- sign is highest bit
+
+	fraction = fraction + (exponent * 256) % 1024; -- copy two(?) bits from exponent to fraction
+	exponent = b_rshift(exponent, 2) % 32; -- remove sign bit and two low bits from fraction;
+
+	if exponent == 0 then
+		return sign * m_ldexp(exponent, -24);
+	elseif exponent ~= 31 then
+		return sign * m_ldexp(fraction + 1024, exponent - 25);
+	elseif fraction == 0 then
+		return sign * m_huge;
+	else
+		return sign == 1 and 0/0 or m_abs(0/0);
+	end
+end
+
+local function read_float(fh)
+	local exponent = read_byte(fh);
+	local fraction = read_byte(fh);
+	local sign = exponent < 128 and 1 or -1; -- sign is highest bit
+	exponent = exponent * 2 % 256 + b_rshift(fraction, 7);
+	fraction = fraction % 128;
+	fraction = fraction * 256 + read_byte(fh);
+	fraction = fraction * 256 + read_byte(fh);
+
+	if exponent == 0 then
+		return sign * m_ldexp(exponent, -149);
+	elseif exponent ~= 0xff then
+		return sign * m_ldexp(fraction + 2^23, exponent - 150);
+	elseif fraction == 0 then
+		return sign * m_huge;
+	else
+		return sign == 1 and 0/0 or m_abs(0/0);
+	end
+end
+
+local function read_double(fh)
+	local exponent = read_byte(fh);
+	local fraction = read_byte(fh);
+	local sign = exponent < 128 and 1 or -1; -- sign is highest bit
+
+	exponent = exponent %  128 * 16 + b_rshift(fraction, 4);
+	fraction = fraction % 16;
+	fraction = fraction * 256 + read_byte(fh);
+	fraction = fraction * 256 + read_byte(fh);
+	fraction = fraction * 256 + read_byte(fh);
+	fraction = fraction * 256 + read_byte(fh);
+	fraction = fraction * 256 + read_byte(fh);
+	fraction = fraction * 256 + read_byte(fh);
+
+	if exponent == 0 then
+		return sign * m_ldexp(exponent, -149);
+	elseif exponent ~= 0xff then
+		return sign * m_ldexp(fraction + 2^52, exponent - 1075);
+	elseif fraction == 0 then
+		return sign * m_huge;
+	else
+		return sign == 1 and 0/0 or m_abs(0/0);
+	end
+end
+
+
+if s_unpack then
+	function read_float(fh) return s_unpack(">f", read_bytes(fh, 4)) end
+	function read_double(fh) return s_unpack(">d", read_bytes(fh, 8)) end
+end
+
+local function read_simple(fh, value)
+	if value == 24 then
+		value = read_byte(fh);
+	end
+	if value == 20 then
+		return false;
+	elseif value == 21 then
+		return true;
+	elseif value == 22 then
+		return null;
+	elseif value == 23 then
+		return undefined;
+	elseif value == 25 then
+		return read_half_float(fh);
+	elseif value == 26 then
+		return read_float(fh);
+	elseif value == 27 then
+		return read_double(fh);
+	elseif value == 31 then
+		return BREAK;
+	end
+	return simple(value);
+end
+
+decoder[0] = read_integer;
+decoder[1] = read_negative_integer;
+decoder[2] = read_string;
+decoder[3] = read_unicode_string;
+decoder[4] = read_array;
+decoder[5] = read_map;
+decoder[6] = read_semantic;
+decoder[7] = read_simple;
+
+local function parse_streaming(s, more)
+	local fh = {};
+	local buffer, buf_pos;
+
+	if type(more) ~= "function" then
+		if more == nil then
+			function more()
+				error "input too short";
+			end
+		else
+			error(("bad argument #2 to 'parse_streaming' (function expected, got %s)"):format(type(more)));
+		end
+	end
+
+	function fh:read(bytes)
+		if buffer then
+			s, buffer = t_concat(buffer), nil;
+		end
+		if #s - bytes < 0 then
+			local ret = more(bytes - #s, fh);
+			if ret then self:write(ret); end
+			return self:read(bytes);
+		end
+		local ret = s:sub(1, bytes);
+		s = s:sub(bytes+1, -1);
+		return ret;
+	end
+
+	function fh:write(bytes)
+		if buffer then
+			buffer[buf_pos], buf_pos = bytes, buf_pos+1;
+		else
+			buffer, buf_pos = { s, bytes }, 3;
+		end
+		return #bytes;
+	end
+
+	return read_object(fh);
 end
 
 return {
 	encode = encode;
-	decode = decode;
+	decode = parse_streaming;
+	decode_file = read_object;
 	type_encoders = encoder;
+	type_decoders = decoder;
 	null = null;
 	undefined = undefined;
 	simple = simple;
