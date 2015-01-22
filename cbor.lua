@@ -428,9 +428,9 @@ decoder[5] = read_map;
 decoder[6] = read_semantic;
 decoder[7] = read_simple;
 
-local function parse_streaming(s, more)
+local function decode(s, more)
 	local fh = {};
-	local buffer, buf_pos;
+	local pos = 1;
 
 	if type(more) ~= "function" then
 		if more == nil then
@@ -443,25 +443,18 @@ local function parse_streaming(s, more)
 	end
 
 	function fh:read(bytes)
-		if buffer then
-			s, buffer = t_concat(buffer), nil;
-		end
-		if #s - bytes < 0 then
-			local ret = more(bytes - #s, fh);
+		local ret = s:sub(pos, pos+bytes-1);
+		if #ret < bytes then
+			local ret = more(bytes - #ret, fh);
 			if ret then self:write(ret); end
 			return self:read(bytes);
 		end
-		local ret = s:sub(1, bytes);
-		s = s:sub(bytes+1, -1);
+		pos = pos + bytes;
 		return ret;
 	end
 
 	function fh:write(bytes)
-		if buffer then
-			buffer[buf_pos], buf_pos = bytes, buf_pos+1;
-		else
-			buffer, buf_pos = { s, bytes }, 3;
-		end
+		s = s .. bytes;
 		return #bytes;
 	end
 
@@ -470,7 +463,7 @@ end
 
 return {
 	encode = encode;
-	decode = parse_streaming;
+	decode = decode;
 	decode_file = read_object;
 	type_encoders = encoder;
 	type_decoders = decoder;
