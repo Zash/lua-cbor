@@ -438,7 +438,7 @@ local function decode(s, more)
 				error "input too short";
 			end
 		else
-			error(("bad argument #2 to 'parse_streaming' (function expected, got %s)"):format(type(more)));
+			error(("bad argument #2 to 'decode' (function expected, got %s)"):format(type(more)));
 		end
 	end
 
