@@ -17,7 +17,6 @@ local getmetatable = getmetatable;
 local error = error;
 local type = type;
 local pairs = pairs;
-local s_byte = string.byte;
 local s_char = string.char;
 local t_concat = table.concat;
 local m_floor = math.floor;
@@ -76,7 +75,8 @@ local function integer(num, m)
 end
 
 if s_pack then
-	function integer(num, m, fmt)
+	function integer(num, m)
+		local fmt;
 		m = m or 0;
 		if num < 24 then
 			fmt, m = ">B", m + num;
@@ -229,7 +229,7 @@ local function read_length(fh, mintyp)
 		return mintyp;
 	elseif mintyp < 28 then
 		local out = 0;
-		for i = 1, 2^(mintyp-24) do
+		for _ = 1, 2^(mintyp-24) do
 			out = out * 256 + read_byte(fh);
 		end
 		return out;
@@ -311,7 +311,7 @@ local function read_map(fh, mintyp)
 		end
 	else
 		local len = read_length(fh, mintyp);
-		for i = 1, len do
+		for _ = 1, len do
 			k = read_object(fh);
 			out[k] = read_object(fh);
 		end
@@ -445,7 +445,7 @@ local function decode(s, more)
 	function fh:read(bytes)
 		local ret = s:sub(pos, pos+bytes-1);
 		if #ret < bytes then
-			local ret = more(bytes - #ret, fh);
+			ret = more(bytes - #ret, fh);
 			if ret then self:write(ret); end
 			return self:read(bytes);
 		end
