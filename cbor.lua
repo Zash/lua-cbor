@@ -455,6 +455,10 @@ local function decode(s, more)
 
 	function fh:write(bytes)
 		s = s .. bytes;
+		if pos > 256 then
+			s = s:sub(pos+1);
+			pos = 1;
+		end
 		return #bytes;
 	end
 
