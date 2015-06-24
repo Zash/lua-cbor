@@ -432,14 +432,12 @@ local function decode(s, more)
 	local fh = {};
 	local pos = 1;
 
-	if type(more) ~= "function" then
-		if more == nil then
-			function more()
-				error "input too short";
-			end
-		else
-			error(("bad argument #2 to 'decode' (function expected, got %s)"):format(type(more)));
+	if more == nil then
+		function more()
+			error "input too short";
 		end
+	elseif type(more) ~= "function" then
+		error(("bad argument #2 to 'decode' (function expected, got %s)"):format(type(more)));
 	end
 
 	function fh:read(bytes)
