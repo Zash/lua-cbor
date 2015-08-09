@@ -1,7 +1,1 @@
 Implement CBOR in/for Lua
-* Encoder
-	* UTF-8 text
-	* Tagged datatypes?
-* Decoder
-	* Floats
-	* Tagged datatypes
