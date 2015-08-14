@@ -195,27 +195,29 @@ function encoder.table(t)
 	if mt and mt.__tocbor then
 		return mt.__tocbor(t);
 	end
-	local a, m, i, p = { integer(#t, 128) }, { "\191" }, 1, 2;
-	local is_a, ve = true;
+	local array, map, i, p = { integer(#t, 128) }, { "\191" }, 1, 2;
+	local is_array = true;
 	for k, v in pairs(t) do
-		is_a = is_a and i == k;
+		is_array = is_array and i == k;
 		i = i + 1;
 
-		ve = encode(v);
-		a[i] = ve;
+		local encoded_v = encode(v);
+		array[i] = encoded_v;
 
-		m[p], p = encode(k), p + 1;
-		m[p], p = ve, p + 1;
+		map[p], p = encode(k), p + 1;
+		map[p], p = encoded_v, p + 1;
 	end
-	-- m[p] = "\255";
-	m[1] = integer(i-1, 160);
-	return t_concat(is_a and a or m);
+	-- map[p] = "\255";
+	map[1] = integer(i-1, 160);
+	return t_concat(is_array and array or map);
 end
 
 encoder["function"] = function()
 	error "can't encode function";
 end
 
+-- Decoder
+-- Reads from a file-handle like object
 local function read_bytes(fh, len)
 	return fh:read(len);
 end
