@@ -100,9 +100,7 @@ function simple_mt:__tostring() return self.name or ("simple(%d)"):format(self.v
 function simple_mt:__tocbor() return self.cbor or integer(self.value, 224); end
 
 local function simple(value, name, cbor)
-	if value < 0 or value > 255 then
-		error "simple value out of bounds";
-	end
+	assert(value >= 0 and value <= 255, "bad argument #1 to 'simple' (integer in range 0..255 expected)");
 	return setmetatable({ value = value, name = name, cbor = cbor }, simple_mt);
 end
 
@@ -111,6 +109,7 @@ function tagged_mt:__tostring() return ("%d(%s)"):format(self.tag, tostring(self
 function tagged_mt:__tocbor() return integer(self.tag, 192) .. encode(self.value); end
 
 local function tagged(tag, value)
+	assert(tag >= 0, "bad argument #1 to 'tagged' (positive integer expected)");
 	return setmetatable({ tag = tag, value = value }, tagged_mt);
 end
 
