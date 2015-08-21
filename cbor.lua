@@ -496,13 +496,20 @@ local function decode(s, more)
 end
 
 return {
+	-- en-/decoder functions
 	encode = encode;
 	decode = decode;
 	decode_file = read_object;
+
+	-- tables of per-type en-/decoders
 	type_encoders = encoder;
 	type_decoders = decoder;
-	null = null;
-	undefined = undefined;
+
+	-- constructors for annotated types
 	simple = simple;
 	tagged = tagged;
+
+	-- pre-defined simple values
+	null = null;
+	undefined = undefined;
 };
