@@ -196,6 +196,14 @@ function encoder.table(t)
 	if mt and mt.__tocbor then
 		return mt.__tocbor(t);
 	end
+	-- the table is encoded as an array iff when we iterate over it,
+	-- we see succesive integer keys starting from 1.  The lua
+	-- language doesn't actually guarantee that this will be the case
+	-- when we iterate over a table with successive integer keys, but
+	-- due an implementation detail in PUC Rio Lua, this is what we
+	-- usually observe.  See the Lua manual regarding the # (length)
+	-- operator.  In the case that this does not happen, we will fall
+	-- back to a map with integer keys, which becomes a bit larger.
 	local array, map, i, p = { integer(#t, 128) }, { "\191" }, 1, 2;
 	local is_array = true;
 	for k, v in pairs(t) do
