@@ -1,5 +1,7 @@
 -- Concise Binary Object Representation (CBOR)
 -- RFC 7049
+--
+-- luacheck: ignore unused argument self
 
 local function softreq(pkg, field)
 	local ok, mod = pcall(require, pkg);
