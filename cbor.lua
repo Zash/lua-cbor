@@ -221,6 +221,27 @@ function encoder.table(t)
 	return t_concat(is_array and array or map);
 end
 
+-- Array or dict-only encoders, which can be set as __tocbor metamethod
+function encoder.array(t)
+	local array = { integer(#t, 128) };
+	for i = 1, #t do
+		array[i] = encode(t[i]);
+	end
+	return t_concat(array);
+end
+
+function encoder.dict(t)
+	local map, p, len = { "\191" }, 2, 0;
+	for k, v in pairs(t) do
+		map[p], p = encode(k), p + 1;
+		map[p], p = encode(v), p + 1;
+		len = len + 1;
+	end
+	-- map[p] = "\255";
+	map[1] = integer(len, 160);
+	return t_concat(map);
+end
+
 encoder["function"] = function()
 	error "can't encode function";
 end
