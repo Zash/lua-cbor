@@ -1,5 +1,4 @@
 Implement CBOR in/for Lua
 
-* README
 * C implementation maybe
 * A rockspec file
