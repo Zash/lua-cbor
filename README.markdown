@@ -30,7 +30,7 @@ value.
 
 ### `cbor.decode_file(file)`
 
-`cbor.decode_file behaves like `cbor.decode` but reads from a Lua file
+`cbor.decode_file` behaves like `cbor.decode` but reads from a Lua file
 handle instead of a string.  It can also read from anything that
 behaves like a file handle, i.e. exposes an `:read(bytes)` method.
 
