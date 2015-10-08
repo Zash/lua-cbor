@@ -10,7 +10,7 @@ local function softreq(pkg, field)
 	return mod;
 end
 local dostring = function (s)
-	local ok, f = (loadstring or load)(s);
+	local ok, f = pcall(loadstring or load, s);
 	if ok then return f(); end
 end
 
