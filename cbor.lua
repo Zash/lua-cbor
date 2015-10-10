@@ -188,7 +188,7 @@ function encoder.userdata(ud)
 	if mt and mt.__tocbor then
 		return mt.__tocbor(ud);
 	end
-	error "can't encode userdata"
+	error "can't encode userdata";
 end
 
 function encoder.table(t)
