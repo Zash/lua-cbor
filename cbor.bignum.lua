@@ -20,7 +20,6 @@ bignum.interpose("__tocbor", bignum_to_cbor);
 
 local function tagged2_to_bignum(value)
 	local n = bignum.new(0);
-	local value = value;
 	for i = 1, #value do
 		n = n * Ox100; -- << 8
 		n = n + value:byte(i);
