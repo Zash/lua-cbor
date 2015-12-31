@@ -10,6 +10,10 @@ and bitwise operations if available.
 Obtaining the source
 --------------------
 
+Lua-CBOR can be installed using [LuaRocks](https://luarocks.org/):
+
+    luarocks install lua-cbor
+
 Sources are available from <http://code.zash.se/lua-cbor/>.
 
 API
