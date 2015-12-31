@@ -351,9 +351,15 @@ local function read_map(fh, mintyp)
 	return out;
 end
 
+local tagged_decoders = {};
+
 local function read_semantic(fh, mintyp)
 	local tag = read_length(fh, mintyp);
 	local value = read_object(fh);
+	local postproc = tagged_decoders[tag];
+	if postproc then
+		return postproc(value);
+	end
 	return tagged(tag, value);
 end
 
@@ -504,6 +510,9 @@ return {
 	-- tables of per-type en-/decoders
 	type_encoders = encoder;
 	type_decoders = decoder;
+
+	-- special treatment for tagged values
+	tagged_decoders = tagged_decoders;
 
 	-- constructors for annotated types
 	simple = simple;
