@@ -13,7 +13,7 @@ local function bignum_to_cbor(n)
 		n = big_negatives_one - n;
 	end
 	local as_binary = n:tobin();
-	return cbor.encoder.table(cbor.tagged(2, as_binary));
+	return cbor.type_encoders.table(cbor.tagged(tag, as_binary));
 end
 
 bignum.interpose("__tocbor", bignum_to_cbor);
