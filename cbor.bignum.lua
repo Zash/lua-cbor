@@ -1,4 +1,4 @@
--- Bignum support using Lua-OpenSSL
+-- Bignum support using luaossl
 local cbor = require "cbor";
 local bignum = require "openssl.bignum";
 
