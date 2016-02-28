@@ -26,6 +26,10 @@ local function tagged2_to_bignum(value)
 	return n;
 end
 
+if bignum.fromBinary then
+	tagged2_to_bignum = bignum.fromBinary;
+end
+
 local function tagged3_to_bignum(value)
 	return big_negatives_one - tagged2_to_bignum(value);
 end
