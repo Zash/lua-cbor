@@ -4,7 +4,6 @@ local bignum = require "openssl.bignum";
 
 local big_zero = bignum.new(0);
 local big_negatives_one = bignum.new(-1);
-local Ox100 = bignum.new(0x100);
 
 local function bignum_to_cbor(n)
 	local tag = 2;
@@ -21,7 +20,7 @@ bignum.interpose("__tocbor", bignum_to_cbor);
 local function tagged2_to_bignum(value)
 	local n = bignum.new(0);
 	for i = 1, #value do
-		n = n * Ox100; -- << 8
+		n = n:shl(8);
 		n = n + value:byte(i);
 	end
 	return n;
