@@ -132,10 +132,10 @@ end
 
 -- Major type 7
 function encoder.float(num)
-	local sign = (num > 0 or 1 / num > 0) and 0 or 1
 	if num ~= num then -- NaN shortcut
 		return "\251\127\255\255\255\255\255\255\255";
 	end
+	local sign = (num > 0 or 1 / num > 0) and 0 or 1
 	num = m_abs(num)
 	if num == m_huge then
 		return s_char(251, sign * 2^7 + 2^7 - 1) .. "\240\0\0\0\0\0\0";
