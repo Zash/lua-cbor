@@ -133,7 +133,7 @@ end
 -- Major type 7
 function encoder.float(num)
 	local sign = (num > 0 or 1 / num > 0) and 0 or 1
-	if num ~= num then
+	if num ~= num then -- NaN shortcut
 		return "\251\127\255\255\255\255\255\255\255";
 	end
 	num = m_abs(num)
