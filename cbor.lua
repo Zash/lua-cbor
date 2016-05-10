@@ -1,7 +1,5 @@
 -- Concise Binary Object Representation (CBOR)
 -- RFC 7049
---
--- luacheck: ignore 212/self
 
 local function softreq(pkg, field)
 	local ok, mod = pcall(require, pkg);
@@ -10,7 +8,7 @@ local function softreq(pkg, field)
 	return mod;
 end
 local dostring = function (s)
-	local ok, f = pcall(loadstring or load, s);
+	local ok, f = pcall(loadstring or load, s); -- luacheck: read globals loadstring
 	if ok then return f(); end
 end
 
@@ -489,7 +487,7 @@ local function decode(s, more)
 		return ret;
 	end
 
-	function fh:write(bytes)
+	function fh:write(bytes) -- luacheck: no self
 		s = s .. bytes;
 		if pos > 256 then
 			s = s:sub(pos+1);
