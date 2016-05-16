@@ -14,9 +14,12 @@ end
 
 local setmetatable = setmetatable;
 local getmetatable = getmetatable;
+local dbg_getmetatable = debug.getmetatable;
+local assert = assert;
 local error = error;
 local type = type;
 local pairs = pairs;
+local tostring = tostring;
 local s_char = string.char;
 local t_concat = table.concat;
 local m_floor = math.floor;
@@ -184,7 +187,7 @@ end
 encoder["nil"] = function() return "\246"; end
 
 function encoder.userdata(ud)
-	local mt = debug.getmetatable(ud);
+	local mt = dbg_getmetatable(ud);
 	if mt and mt.__tocbor then
 		return mt.__tocbor(ud);
 	end
