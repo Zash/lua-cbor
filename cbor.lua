@@ -277,7 +277,7 @@ local decoder = {};
 
 local function read_type(fh)
 	local byte = read_byte(fh);
-	return b_rshift(byte, 5), byte % 2^5;
+	return b_rshift(byte, 5), byte % 32;
 end
 
 local function read_object(fh)
