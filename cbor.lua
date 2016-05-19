@@ -376,7 +376,7 @@ local function read_half_float(fh)
 	exponent = b_rshift(exponent, 2) % 32; -- remove sign bit and two low bits from fraction;
 
 	if exponent == 0 then
-		return sign * m_ldexp(exponent, -24);
+		return sign * m_ldexp(fraction, -24);
 	elseif exponent ~= 31 then
 		return sign * m_ldexp(fraction + 1024, exponent - 25);
 	elseif fraction == 0 then
