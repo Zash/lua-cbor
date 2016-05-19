@@ -226,11 +226,11 @@ end
 
 -- Array or dict-only encoders, which can be set as __tocbor metamethod
 function encoder.array(t)
-	local array = { integer(#t, 128) };
+	local array = { };
 	for i = 1, #t do
 		array[i] = encode(t[i]);
 	end
-	return t_concat(array);
+	return integer(#t, 128) .. t_concat(array);
 end
 
 function encoder.dict(t)
