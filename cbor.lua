@@ -231,7 +231,7 @@ function encoder.array(t)
 	for i, v in ipairs(t) do
 		array[i] = encode(v);
 	end
-	return integer(#t, 128) .. t_concat(array);
+	return integer(#array, 128) .. t_concat(array);
 end
 
 function encoder.dict(t)
