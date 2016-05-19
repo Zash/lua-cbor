@@ -141,14 +141,14 @@ function encoder.float(num)
 	local sign = (num > 0 or 1 / num > 0) and 0 or 1
 	num = m_abs(num)
 	if num == m_huge then
-		return s_char(251, sign * 2^7 + 2^7 - 1) .. "\240\0\0\0\0\0\0";
+		return s_char(251, sign * 128 + 128 - 1) .. "\240\0\0\0\0\0\0";
 	end
 	local fraction, exponent = m_frexp(num)
 	if fraction == 0 then
-		return s_char(251, sign * 2^7) .. "\0\0\0\0\0\0\0";
+		return s_char(251, sign * 128) .. "\0\0\0\0\0\0\0";
 	end
 	fraction = fraction * 2
-	exponent = exponent + 2^10 - 2
+	exponent = exponent + 1024 - 2
 	if exponent <= 0 then
 		fraction = fraction * 2 ^ (exponent - 1)
 		exponent = 0
