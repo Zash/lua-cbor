@@ -29,6 +29,7 @@ local m_huge = math.huge;
 local m_max = math.max;
 local maxint = math.maxinteger or 9007199254740992;
 local minint = math.mininteger or -9007199254740992;
+local NaN = 0/0;
 local m_frexp = math.frexp;
 local m_ldexp = math.ldexp or function(x, exp) return x * 2.0^exp; end;
 local m_type = math.type or function (n) return n % 1 == 0 and n <= maxint and n >= minint and "integer" or "float" end;
@@ -382,7 +383,7 @@ local function read_half_float(fh)
 	elseif fraction == 0 then
 		return sign * m_huge;
 	else
-		return sign == 1 and 0/0 or m_abs(0/0);
+		return NaN;
 	end
 end
 
@@ -402,7 +403,7 @@ local function read_float(fh)
 	elseif fraction == 0 then
 		return sign * m_huge;
 	else
-		return sign == 1 and 0/0 or m_abs(0/0);
+		return NaN;
 	end
 end
 
@@ -427,7 +428,7 @@ local function read_double(fh)
 	elseif fraction == 0 then
 		return sign * m_huge;
 	else
-		return sign == 1 and 0/0 or m_abs(0/0);
+		return NaN;
 	end
 end
 
