@@ -170,7 +170,7 @@ end
 
 if s_pack then
 	function encoder.float(num)
-		return s_pack(">bd", 251, num);
+		return s_pack(">Bd", 251, num);
 	end
 end
 
