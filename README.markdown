@@ -56,3 +56,53 @@ Two such values are pre-defined:
 which is an integer attached to a value, which can be any value.
 
 [tagged]: http://tools.ietf.org/html/rfc7049#section-2.4
+
+### `cbor.type_encoders`
+
+A table containing functions for serializing each Lua type, and a few
+without direct Lua equivalents.
+
+`number`
+:   Encodes as `integer` or `float` depending on the value.
+
+`integer`
+:   Encodes an integer.
+
+`float`
+:   Encodes a IEEE 754 Double-Precision Float, the default Lua number type until 5.3.
+
+`string`
+:   Encodes a Lua string as a CBOR byte string, or an UTF-8 string if it
+    appars as such to the Lua 5.3 function `utf8.len`.
+
+`boolean`
+:   Encodes a boolean value.
+
+`table`
+:   Encodes a Lua table either as a CBOR array or map. If it sees
+    succesive integer keys when iterating using `pairs`, it will return an array,
+    otherwise a map.
+
+`array`
+:   Encodes a Lua table as a CBOR array. Uses `ipairs` internally so the
+    resulting array will end at the first `nil`.
+
+`dict`
+:   Encodes a Lua table as a CBOR map, without guessing if it should be an array.
+
+Custom serialization
+--------------------
+
+If Lua-CBOR sees a `__tocbor` metatable field during serialization it
+will call it, expecting a serialized string in return.
+
+This can be composed from fields in `cbor.type_encoders`.
+
+For example:
+
+``` lua
+local array_mt = { __tocbor = cbor.type_encoders.array }
+
+cbor.encode(setmetatable({1, 2, 3, nil, foo= "bar" }, array_mt));
+```
+
