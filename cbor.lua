@@ -29,7 +29,7 @@ local m_max = math.max;
 local maxint = math.maxinteger or 9007199254740992;
 local minint = math.mininteger or -9007199254740992;
 local m_frexp = math.frexp;
-local m_ldexp = math.ldexp;
+local m_ldexp = math.ldexp or function(x, exp) return x * 2.0^exp; end;
 local m_type = math.type or function (n) return n % 1 == 0 and n <= maxint and n >= minint and "integer" or "float" end;
 local s_pack = string.pack or softreq("struct", "pack");
 local s_unpack = string.unpack or softreq("struct", "unpack");
