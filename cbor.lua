@@ -19,6 +19,7 @@ local assert = assert;
 local error = error;
 local type = type;
 local pairs = pairs;
+local ipairs = ipairs;
 local tostring = tostring;
 local s_char = string.char;
 local t_concat = table.concat;
@@ -227,8 +228,8 @@ end
 -- Array or dict-only encoders, which can be set as __tocbor metamethod
 function encoder.array(t)
 	local array = { };
-	for i = 1, #t do
-		array[i] = encode(t[i]);
+	for i, v in ipairs(t) do
+		array[i] = encode(v);
 	end
 	return integer(#t, 128) .. t_concat(array);
 end
