@@ -106,3 +106,16 @@ local array_mt = { __tocbor = cbor.type_encoders.array }
 cbor.encode(setmetatable({1, 2, 3, nil, foo= "bar" }, array_mt));
 ```
 
+Bignum support
+--------------
+
+Lua-CBOR has optional support for bignums, using
+[luaossl](http://www.25thandclement.com/~william/projects/luaossl.html).
+
+```lua
+local cbor = require"cbor";
+local bignum = require"openssl.bignum";
+require"cbor.bignum";
+
+io.write(cbor.encode(bignum.new("9000")));
+```
