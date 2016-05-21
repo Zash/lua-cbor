@@ -7,8 +7,8 @@ defined in [RFC 7049](http://tools.ietf.org/html/rfc7049).
 It supports Lua 5.1 until 5.3 and will utilize struct packing
 and bitwise operations if available.
 
-Obtaining the source
---------------------
+Installing
+----------
 
 Lua-CBOR can be installed using [LuaRocks](https://luarocks.org/):
 
