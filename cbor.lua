@@ -23,6 +23,7 @@ local ipairs = ipairs;
 local tostring = tostring;
 local s_char = string.char;
 local t_concat = table.concat;
+local t_sort = table.sort;
 local m_floor = math.floor;
 local m_abs = math.abs;
 local m_huge = math.huge;
@@ -247,6 +248,22 @@ function encoder.map(t)
 	return t_concat(map);
 end
 encoder.dict = encoder.map; -- COMPAT
+
+function encoder.ordered_map(t)
+	local map = {};
+	if not t[1] then -- no predefined order
+		local i = 0;
+		for k in pairs(t) do
+			i = i + 1;
+			map[i] = k;
+		end
+		t_sort(map);
+	end
+	for i, k in ipairs(t[1] and t or map) do
+		map[i] = encode(k) .. encode(t[k]);
+	end
+	return integer(#map, 160) .. t_concat(map);
+end
 
 encoder["function"] = function()
 	error "can't encode function";

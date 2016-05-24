@@ -90,6 +90,11 @@ without direct Lua equivalents.
 `map`
 :   Encodes a Lua table as a CBOR map, without guessing if it should be an array.
 
+`ordered_map`
+:   Encodes a Lua table as a CBOR map, with ordered keys. Order can be
+    specified by listing them with incrementing integer keys, otherwise
+    the default sort order is used.
+
 Custom serialization
 --------------------
 
@@ -104,6 +109,10 @@ For example:
 local array_mt = { __tocbor = cbor.type_encoders.array }
 
 cbor.encode(setmetatable({1, 2, 3, nil, foo= "bar" }, array_mt));
+
+local ordered_map_mt = { __tocbor = cbor.type_encoders.ordered_map }
+
+cbor.encode(setmetatable({ foo = "hello", bar = "world", "foo", "bar" }, array_mt));
 ```
 
 Bignum support
