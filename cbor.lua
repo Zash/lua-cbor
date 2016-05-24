@@ -235,7 +235,7 @@ function encoder.array(t)
 	return integer(#array, 128) .. t_concat(array);
 end
 
-function encoder.dict(t)
+function encoder.map(t)
 	local map, p, len = { "\191" }, 2, 0;
 	for k, v in pairs(t) do
 		map[p], p = encode(k), p + 1;
@@ -246,6 +246,7 @@ function encoder.dict(t)
 	map[1] = integer(len, 160);
 	return t_concat(map);
 end
+encoder.dict = encoder.map; -- COMPAT
 
 encoder["function"] = function()
 	error "can't encode function";

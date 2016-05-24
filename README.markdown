@@ -87,7 +87,7 @@ without direct Lua equivalents.
 :   Encodes a Lua table as a CBOR array. Uses `ipairs` internally so the
     resulting array will end at the first `nil`.
 
-`dict`
+`map`
 :   Encodes a Lua table as a CBOR map, without guessing if it should be an array.
 
 Custom serialization
