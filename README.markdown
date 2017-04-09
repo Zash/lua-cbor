@@ -22,21 +22,29 @@ API
 Lua-CBOR has a similar API to many other serialization libraries, like
 Lua-CJSON.
 
-### `cbor.encode(object)`
+### `cbor.encode(object[, options])`
 
 `cbor.encode` encodes `object` into its CBOR representation and returns
 that as a string.
 
-### `cbor.decode(string)`
+Optionally, a table `options` may be supplied, containing a mapping of
+metatables to custom encoder functions for tables and userdata. Such
+functions should return an encoded CBOR data string.
+
+### `cbor.decode(string[, options])`
 
 `cbor.decode` decodes CBOR encoded data from `string` and returns a Lua
 value.
 
-### `cbor.decode_file(file)`
+The optional table `options` may contain callbacks for semantic types
+and simple values encountered during decoding. Simple values use the
+field `simple` and semantic tagged types use integer indices.
+
+### `cbor.decode_file(file[, options)`
 
 `cbor.decode_file` behaves like `cbor.decode` but reads from a Lua file
-handle instead of a string.  It can also read from anything that
-behaves like a file handle, i.e. exposes an `:read(bytes)` method.
+handle instead of a string. It can also read from anything that behaves
+like a file handle, i.e. exposes an `:read(bytes)` method.
 
 ### `cbor.simple(value, name, [cbor])`
 
@@ -98,14 +106,28 @@ without direct Lua equivalents.
 Custom serialization
 --------------------
 
-If Lua-CBOR sees a `__tocbor` metatable field during serialization it
-will call it, expecting a serialized string in return.
+Tables and userdata types that have a metatable may invoke custom
+serialization, either by placing a callback in the optional `options`
+argument, or via a `__tocbor` metatable field.
 
 This can be composed from fields in `cbor.type_encoders`.
 
-For example:
+Some examples::
 
-``` lua
+```lua
+-- using options:
+
+local array_mt = { __name = "array" }
+
+local myarray = setmetatable({1, 2, 3, nil, foo= "bar" }, array_mt);
+local options = {
+    [array_mt] = cbor.type_encoders.array
+}
+
+cbor.encode(myarray, options);
+
+-- or using a __tocbor metatable field
+
 local array_mt = { __tocbor = cbor.type_encoders.array }
 
 cbor.encode(setmetatable({1, 2, 3, nil, foo= "bar" }, array_mt));

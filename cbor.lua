@@ -44,8 +44,8 @@ local _ENV = nil; -- luacheck: ignore 211
 
 local encoder = {};
 
-local function encode(obj)
-	return encoder[type(obj)](obj);
+local function encode(obj, opts)
+	return encoder[type(obj)](obj, opts);
 end
 
 -- Major types 0, 1 and length encoding for others
@@ -189,18 +189,24 @@ end
 
 encoder["nil"] = function() return "\246"; end
 
-function encoder.userdata(ud)
+function encoder.userdata(ud, opts)
 	local mt = dbg_getmetatable(ud);
-	if mt and mt.__tocbor then
-		return mt.__tocbor(ud);
+	if mt then
+		local encode_ud = opts and opts[mt] or mt.__tocbor;
+		if encode_ud then
+			return encode_ud(ud, opts);
+		end
 	end
 	error "can't encode userdata";
 end
 
-function encoder.table(t)
+function encoder.table(t, opts)
 	local mt = getmetatable(t);
-	if mt and mt.__tocbor then
-		return mt.__tocbor(t);
+	if mt then
+		local encode_t = opts and opts[mt] or mt.__tocbor;
+		if encode_t then
+			return encode_t(t, opts);
+		end
 	end
 	-- the table is encoded as an array iff when we iterate over it,
 	-- we see succesive integer keys starting from 1.  The lua
@@ -216,10 +222,10 @@ function encoder.table(t)
 		is_array = is_array and i == k;
 		i = i + 1;
 
-		local encoded_v = encode(v);
+		local encoded_v = encode(v, opts);
 		array[i] = encoded_v;
 
-		map[p], p = encode(k), p + 1;
+		map[p], p = encode(k, opts), p + 1;
 		map[p], p = encoded_v, p + 1;
 	end
 	-- map[p] = "\255";
@@ -228,19 +234,19 @@ function encoder.table(t)
 end
 
 -- Array or dict-only encoders, which can be set as __tocbor metamethod
-function encoder.array(t)
+function encoder.array(t, opts)
 	local array = { };
 	for i, v in ipairs(t) do
-		array[i] = encode(v);
+		array[i] = encode(v, opts);
 	end
 	return integer(#array, 128) .. t_concat(array);
 end
 
-function encoder.map(t)
+function encoder.map(t, opts)
 	local map, p, len = { "\191" }, 2, 0;
 	for k, v in pairs(t) do
-		map[p], p = encode(k), p + 1;
-		map[p], p = encode(v), p + 1;
+		map[p], p = encode(k, opts), p + 1;
+		map[p], p = encode(v, opts), p + 1;
 		len = len + 1;
 	end
 	-- map[p] = "\255";
@@ -249,7 +255,7 @@ function encoder.map(t)
 end
 encoder.dict = encoder.map; -- COMPAT
 
-function encoder.ordered_map(t)
+function encoder.ordered_map(t, opts)
 	local map = {};
 	if not t[1] then -- no predefined order
 		local i = 0;
@@ -260,7 +266,7 @@ function encoder.ordered_map(t)
 		t_sort(map);
 	end
 	for i, k in ipairs(t[1] and t or map) do
-		map[i] = encode(k) .. encode(t[k]);
+		map[i] = encode(k, opts) .. encode(t[k], opts);
 	end
 	return integer(#map, 160) .. t_concat(map);
 end
@@ -300,9 +306,9 @@ local function read_type(fh)
 	return b_rshift(byte, 5), byte % 32;
 end
 
-local function read_object(fh)
+local function read_object(fh, opts)
 	local typ, mintyp = read_type(fh);
-	return decoder[typ](fh, mintyp);
+	return decoder[typ](fh, mintyp, opts);
 end
 
 local function read_integer(fh, mintyp)
@@ -336,39 +342,39 @@ local function read_unicode_string(fh, mintyp)
 	-- return str;
 end
 
-local function read_array(fh, mintyp)
+local function read_array(fh, mintyp, opts)
 	local out = {};
 	if mintyp == 31 then
 		local i = 1;
-		local v = read_object(fh);
+		local v = read_object(fh, opts);
 		while v ~= BREAK do
 			out[i], i = v, i+1;
-			v = read_object(fh);
+			v = read_object(fh, opts);
 		end
 	else
 		local len = read_length(fh, mintyp);
 		for i = 1, len do
-			out[i] = read_object(fh);
+			out[i] = read_object(fh, opts);
 		end
 	end
 	return out;
 end
 
-local function read_map(fh, mintyp)
+local function read_map(fh, mintyp, opts)
 	local out = {};
 	local k;
 	if mintyp == 31 then
 		local i = 1;
-		k = read_object(fh);
+		k = read_object(fh, opts);
 		while k ~= BREAK do
-			out[k], i = read_object(fh), i+1;
-			k = read_object(fh);
+			out[k], i = read_object(fh, opts), i+1;
+			k = read_object(fh, opts);
 		end
 	else
 		local len = read_length(fh, mintyp);
 		for _ = 1, len do
-			k = read_object(fh);
-			out[k] = read_object(fh);
+			k = read_object(fh, opts);
+			out[k] = read_object(fh, opts);
 		end
 	end
 	return out;
@@ -376,10 +382,10 @@ end
 
 local tagged_decoders = {};
 
-local function read_semantic(fh, mintyp)
+local function read_semantic(fh, mintyp, opts)
 	local tag = read_length(fh, mintyp);
-	local value = read_object(fh);
-	local postproc = tagged_decoders[tag];
+	local value = read_object(fh, opts);
+	local postproc = opts and opts[tag] or tagged_decoders[tag];
 	if postproc then
 		return postproc(value);
 	end
@@ -456,7 +462,7 @@ if s_unpack then
 	function read_double(fh) return s_unpack(">d", read_bytes(fh, 8)) end
 end
 
-local function read_simple(fh, value)
+local function read_simple(fh, value, opts)
 	if value == 24 then
 		value = read_byte(fh);
 	end
@@ -477,6 +483,9 @@ local function read_simple(fh, value)
 	elseif value == 31 then
 		return BREAK;
 	end
+	if opts and opts.simple then
+		return opts.simple(value);
+	end
 	return simple(value);
 end
 
@@ -489,22 +498,31 @@ decoder[5] = read_map;
 decoder[6] = read_semantic;
 decoder[7] = read_simple;
 
-local function decode(s, more)
+-- opts.more(n) -> want more data
+-- opts.simple -> decode simple value
+-- opts[int] -> tagged decoder
+local function decode(s, opts)
 	local fh = {};
 	local pos = 1;
 
-	if more == nil then
+	local more;
+		if type(opts) == "function" then
+		more = opts;
+	elseif type(opts) == "table" then
+		more = opts.more;
+	else
+		error(("bad argument #2 to 'decode' (function or table expected, got %s)"):format(type(opts)));
+	end
+	if type(more) ~= "function" then
 		function more()
 			error "input too short";
 		end
-	elseif type(more) ~= "function" then
-		error(("bad argument #2 to 'decode' (function expected, got %s)"):format(type(more)));
 	end
 
 	function fh:read(bytes)
 		local ret = s:sub(pos, pos+bytes-1);
 		if #ret < bytes then
-			ret = more(bytes - #ret, fh);
+			ret = more(bytes - #ret, fh, opts);
 			if ret then self:write(ret); end
 			return self:read(bytes);
 		end
@@ -521,7 +539,7 @@ local function decode(s, more)
 		return #bytes;
 	end
 
-	return read_object(fh);
+	return read_object(fh, opts);
 end
 
 return {
