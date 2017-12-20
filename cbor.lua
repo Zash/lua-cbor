@@ -179,13 +179,17 @@ end
 
 
 -- Major type 2 - byte strings
-function encoder.string(s)
+function encoder.bytestring(s)
 	return integer(#s, 64) .. s;
 end
 
-function encoder.boolean(bool)
-	return bool and "\245" or "\244";
+-- Major type 3 - UTF-8 strings
+function encoder.utf8string(s)
+	return integer(#s, 96) .. s;
 end
+
+-- Lua strings are byte strings
+encoder.string = encoder.bytestring;
 
 encoder["nil"] = function() return "\246"; end
 
