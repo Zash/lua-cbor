@@ -191,6 +191,10 @@ end
 -- Lua strings are byte strings
 encoder.string = encoder.bytestring;
 
+function encoder.boolean(bool)
+	return bool and "\245" or "\244";
+end
+
 encoder["nil"] = function() return "\246"; end
 
 function encoder.userdata(ud, opts)
