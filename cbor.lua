@@ -518,7 +518,7 @@ local function decode(s, opts)
 		more = opts;
 	elseif type(opts) == "table" then
 		more = opts.more;
-	else
+	elseif opts ~= nil then
 		error(("bad argument #2 to 'decode' (function or table expected, got %s)"):format(type(opts)));
 	end
 	if type(more) ~= "function" then
