@@ -32,13 +32,13 @@ local maxint = math.maxinteger or 9007199254740992;
 local minint = math.mininteger or -9007199254740992;
 local NaN = 0/0;
 local m_frexp = math.frexp;
-local m_ldexp = math.ldexp or function(x, exp) return x * 2.0^exp; end;
+local m_ldexp = math.ldexp or function (x, exp) return x * 2.0 ^ exp; end;
 local m_type = math.type or function (n) return n % 1 == 0 and n <= maxint and n >= minint and "integer" or "float" end;
 local s_pack = string.pack or softreq("struct", "pack");
 local s_unpack = string.unpack or softreq("struct", "unpack");
 local b_rshift = softreq("bit32", "rshift") or softreq("bit", "rshift") or
-	dostring"return function(a,b) return a>>b end" or
-	function (a, b) return m_max(0, m_floor(a / (2^b))); end;
+	dostring "return function(a,b) return a >> b end" or
+	function (a, b) return m_max(0, m_floor(a / (2 ^ b))); end;
 
 local _ENV = nil; -- luacheck: ignore 211
 
@@ -52,23 +52,23 @@ end
 local function integer(num, m)
 	if m == 0 and num < 0 then
 		-- negative integer, major type 1
-		num, m  = - num - 1, 32
+		num, m = - num - 1, 32;
 	end
 	if num < 24 then
 		return s_char(m + num);
-	elseif num < 2^8 then
+	elseif num < 2 ^ 8 then
 		return s_char(m + 24, num);
-	elseif num < 2^16 then
+	elseif num < 2 ^ 16 then
 		return s_char(m + 25, b_rshift(num, 8), num % 0x100);
-	elseif num < 2^32 then
+	elseif num < 2 ^ 32 then
 		return s_char(m + 26,
 			b_rshift(num, 24) % 0x100,
 			b_rshift(num, 16) % 0x100,
 			b_rshift(num, 8) % 0x100,
 			num % 0x100);
-	elseif num < 2^64 then
-		local high = m_floor(num / 2^32);
-		num = num % 2^32;
+	elseif num < 2 ^ 64 then
+		local high = m_floor(num / 2 ^ 32);
+		num = num % 2 ^ 32;
 		return s_char(m + 27,
 			b_rshift(high, 24) % 0x100,
 			b_rshift(high, 16) % 0x100,
@@ -131,7 +131,7 @@ end
 -- Major types 0, 1
 function encoder.integer(num)
 	if num < 0 then
-		return integer(-1-num, 32);
+		return integer(-1 - num, 32);
 	end
 	return integer(num, 0);
 end
@@ -141,7 +141,7 @@ function encoder.float(num)
 	if num ~= num then -- NaN shortcut
 		return "\251\127\255\255\255\255\255\255\255";
 	end
-	local sign = (num > 0 or 1 / num > 0) and 0 or 1
+	local sign = (num > 0 or 1 / num > 0) and 0 or 1;
 	num = m_abs(num)
 	if num == m_huge then
 		return s_char(251, sign * 128 + 128 - 1) .. "\240\0\0\0\0\0\0";
@@ -150,24 +150,24 @@ function encoder.float(num)
 	if fraction == 0 then
 		return s_char(251, sign * 128) .. "\0\0\0\0\0\0\0";
 	end
-	fraction = fraction * 2
-	exponent = exponent + 1024 - 2
+	fraction = fraction * 2;
+	exponent = exponent + 1024 - 2;
 	if exponent <= 0 then
 		fraction = fraction * 2 ^ (exponent - 1)
-		exponent = 0
+		exponent = 0;
 	else
-		fraction = fraction - 1
+		fraction = fraction - 1;
 	end
 	return s_char(251,
-		sign * 2^7 + m_floor(exponent / 2^4) % 2^7,
-		exponent % 2^4 * 2^4 +
-		m_floor(fraction * 2^4  % 0x100),
-		m_floor(fraction * 2^12 % 0x100),
-		m_floor(fraction * 2^20 % 0x100),
-		m_floor(fraction * 2^28 % 0x100),
-		m_floor(fraction * 2^36 % 0x100),
-		m_floor(fraction * 2^44 % 0x100),
-		m_floor(fraction * 2^52 % 0x100)
+		sign * 2 ^ 7 + m_floor(exponent / 2 ^ 4) % 2 ^ 7,
+		exponent % 2 ^ 4 * 2 ^ 4 +
+		m_floor(fraction * 2 ^ 4 % 0x100),
+		m_floor(fraction * 2 ^ 12 % 0x100),
+		m_floor(fraction * 2 ^ 20 % 0x100),
+		m_floor(fraction * 2 ^ 28 % 0x100),
+		m_floor(fraction * 2 ^ 36 % 0x100),
+		m_floor(fraction * 2 ^ 44 % 0x100),
+		m_floor(fraction * 2 ^ 52 % 0x100)
 	)
 end
 
@@ -237,7 +237,7 @@ function encoder.table(t, opts)
 		map[p], p = encoded_v, p + 1;
 	end
 	-- map[p] = "\255";
-	map[1] = integer(i-1, 160);
+	map[1] = integer(i - 1, 160);
 	return t_concat(is_array and array or map);
 end
 
@@ -279,7 +279,7 @@ function encoder.ordered_map(t, opts)
 	return integer(#map, 160) .. t_concat(map);
 end
 
-encoder["function"] = function()
+encoder["function"] = function ()
 	error "can't encode function";
 end
 
@@ -298,7 +298,7 @@ local function read_length(fh, mintyp)
 		return mintyp;
 	elseif mintyp < 28 then
 		local out = 0;
-		for _ = 1, 2^(mintyp-24) do
+		for _ = 1, 2 ^ (mintyp - 24) do
 			out = out * 256 + read_byte(fh);
 		end
 		return out;
@@ -335,7 +335,7 @@ local function read_string(fh, mintyp)
 	local i = 1;
 	local v = read_object(fh);
 	while v ~= BREAK do
-		out[i], i = v, i+1;
+		out[i], i = v, i + 1;
 		v = read_object(fh);
 	end
 	return t_concat(out);
@@ -356,7 +356,7 @@ local function read_array(fh, mintyp, opts)
 		local i = 1;
 		local v = read_object(fh, opts);
 		while v ~= BREAK do
-			out[i], i = v, i+1;
+			out[i], i = v, i + 1;
 			v = read_object(fh, opts);
 		end
 	else
@@ -375,7 +375,7 @@ local function read_map(fh, mintyp, opts)
 		local i = 1;
 		k = read_object(fh, opts);
 		while k ~= BREAK do
-			out[k], i = read_object(fh, opts), i+1;
+			out[k], i = read_object(fh, opts), i + 1;
 			k = read_object(fh, opts);
 		end
 	else
@@ -431,7 +431,7 @@ local function read_float(fh)
 	if exponent == 0 then
 		return sign * m_ldexp(exponent, -149);
 	elseif exponent ~= 0xff then
-		return sign * m_ldexp(fraction + 2^23, exponent - 150);
+		return sign * m_ldexp(fraction + 2 ^ 23, exponent - 150);
 	elseif fraction == 0 then
 		return sign * m_huge;
 	else
@@ -456,7 +456,7 @@ local function read_double(fh)
 	if exponent == 0 then
 		return sign * m_ldexp(exponent, -149);
 	elseif exponent ~= 0xff then
-		return sign * m_ldexp(fraction + 2^52, exponent - 1075);
+		return sign * m_ldexp(fraction + 2 ^ 52, exponent - 1075);
 	elseif fraction == 0 then
 		return sign * m_huge;
 	else
@@ -514,7 +514,7 @@ local function decode(s, opts)
 	local pos = 1;
 
 	local more;
-		if type(opts) == "function" then
+	if type(opts) == "function" then
 		more = opts;
 	elseif type(opts) == "table" then
 		more = opts.more;
@@ -528,7 +528,7 @@ local function decode(s, opts)
 	end
 
 	function fh:read(bytes)
-		local ret = s:sub(pos, pos+bytes-1);
+		local ret = s:sub(pos, pos + bytes - 1);
 		if #ret < bytes then
 			ret = more(bytes - #ret, fh, opts);
 			if ret then self:write(ret); end
@@ -541,7 +541,7 @@ local function decode(s, opts)
 	function fh:write(bytes) -- luacheck: no self
 		s = s .. bytes;
 		if pos > 256 then
-			s = s:sub(pos+1);
+			s = s:sub(pos + 1);
 			pos = 1;
 		end
 		return #bytes;
