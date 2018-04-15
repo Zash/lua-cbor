@@ -1,45 +1,83 @@
--- generated from appendix_a.json
-
 local cbor = require"cbor";
 describe("cbor.decode", function ()
 	it("AA==", function()
 		assert.are.same(0, cbor.decode("\000"))
 	end);
 
+	it("AA==", function()
+		assert.are.equal("\000", cbor.encode(cbor.decode("\000")))
+	end);
+
 	it("AQ==", function()
 		assert.are.same(1, cbor.decode("\001"))
+	end);
+
+	it("AQ==", function()
+		assert.are.equal("\001", cbor.encode(cbor.decode("\001")))
 	end);
 
 	it("Cg==", function()
 		assert.are.same(10, cbor.decode("\n"))
 	end);
 
+	it("Cg==", function()
+		assert.are.equal("\n", cbor.encode(cbor.decode("\n")))
+	end);
+
 	it("Fw==", function()
 		assert.are.same(23, cbor.decode("\023"))
+	end);
+
+	it("Fw==", function()
+		assert.are.equal("\023", cbor.encode(cbor.decode("\023")))
 	end);
 
 	it("GBg=", function()
 		assert.are.same(24, cbor.decode("\024\024"))
 	end);
 
+	it("GBg=", function()
+		assert.are.equal("\024\024", cbor.encode(cbor.decode("\024\024")))
+	end);
+
 	it("GBk=", function()
 		assert.are.same(25, cbor.decode("\024\025"))
+	end);
+
+	it("GBk=", function()
+		assert.are.equal("\024\025", cbor.encode(cbor.decode("\024\025")))
 	end);
 
 	it("GGQ=", function()
 		assert.are.same(100, cbor.decode("\024d"))
 	end);
 
+	it("GGQ=", function()
+		assert.are.equal("\024d", cbor.encode(cbor.decode("\024d")))
+	end);
+
 	it("GQPo", function()
 		assert.are.same(1000, cbor.decode("\025\003\232"))
+	end);
+
+	it("GQPo", function()
+		assert.are.equal("\025\003\232", cbor.encode(cbor.decode("\025\003\232")))
 	end);
 
 	it("GgAPQkA=", function()
 		assert.are.same(1000000, cbor.decode("\026\000\015B@"))
 	end);
 
+	it("GgAPQkA=", function()
+		assert.are.equal("\026\000\015B@", cbor.encode(cbor.decode("\026\000\015B@")))
+	end);
+
 	it("GwAAAOjUpRAA", function()
 		assert.are.same(1000000000000, cbor.decode("\027\000\000\000\232\212\165\016\000"))
+	end);
+
+	it("GwAAAOjUpRAA", function()
+		assert.are.equal("\027\000\000\000\232\212\165\016\000", cbor.encode(cbor.decode("\027\000\000\000\232\212\165\016\000")))
 	end);
 
 	it("G///////////", function()
@@ -64,16 +102,32 @@ describe("cbor.decode", function ()
 		assert.are.same(-1, cbor.decode(" "))
 	end);
 
+	it("IA==", function()
+		assert.are.equal(" ", cbor.encode(cbor.decode(" ")))
+	end);
+
 	it("KQ==", function()
 		assert.are.same(-10, cbor.decode(")"))
+	end);
+
+	it("KQ==", function()
+		assert.are.equal(")", cbor.encode(cbor.decode(")")))
 	end);
 
 	it("OGM=", function()
 		assert.are.same(-100, cbor.decode("8c"))
 	end);
 
+	it("OGM=", function()
+		assert.are.equal("8c", cbor.encode(cbor.decode("8c")))
+	end);
+
 	it("OQPn", function()
 		assert.are.same(-1000, cbor.decode("9\003\231"))
+	end);
+
+	it("OQPn", function()
+		assert.are.equal("9\003\231", cbor.encode(cbor.decode("9\003\231")))
 	end);
 
 	it("+QAA", function()
@@ -90,6 +144,10 @@ describe("cbor.decode", function ()
 
 	it("+z/xmZmZmZma", function()
 		assert.are.same(1.1000000000, cbor.decode("\251?\241\153\153\153\153\153\154"))
+	end);
+
+	it("+z/xmZmZmZma", function()
+		assert.are.equal("\251?\241\153\153\153\153\153\154", cbor.encode(cbor.decode("\251?\241\153\153\153\153\153\154")))
 	end);
 
 	it("+T4A", function()
@@ -110,6 +168,10 @@ describe("cbor.decode", function ()
 
 	it("+3435DyIAHWc", function()
 		assert.are.same(1.0e+300, cbor.decode("\251~7\228<\136\000u\156"))
+	end);
+
+	it("+3435DyIAHWc", function()
+		assert.are.equal("\251~7\228<\136\000u\156", cbor.encode(cbor.decode("\251~7\228<\136\000u\156")))
 	end);
 
 	it("+QAB", function()
@@ -176,12 +238,24 @@ describe("cbor.decode", function ()
 		assert.are.same(false, cbor.decode("\244"))
 	end);
 
+	it("9A==", function()
+		assert.are.equal("\244", cbor.encode(cbor.decode("\244")))
+	end);
+
 	it("9Q==", function()
 		assert.are.same(true, cbor.decode("\245"))
 	end);
 
+	it("9Q==", function()
+		assert.are.equal("\245", cbor.encode(cbor.decode("\245")))
+	end);
+
 	it("9g==", function()
 		assert.are.equal(cbor.null, cbor.decode("\246"))
+	end);
+
+	it("9g==", function()
+		assert.are.equal("\246", cbor.encode(cbor.decode("\246")))
 	end);
 
 	it("undefined", function()
@@ -286,16 +360,32 @@ describe("cbor.decode", function ()
 		assert.are.same({}, cbor.decode("\128"))
 	end);
 
+	it("gA==", function()
+		assert.are.equal("\128", cbor.encode(cbor.decode("\128")))
+	end);
+
 	it("gwECAw==", function()
 		assert.are.same({1;2;3}, cbor.decode("\131\001\002\003"))
+	end);
+
+	it("gwECAw==", function()
+		assert.are.equal("\131\001\002\003", cbor.encode(cbor.decode("\131\001\002\003")))
 	end);
 
 	it("gwGCAgOCBAU=", function()
 		assert.are.same({1;{2;3};{4;5}}, cbor.decode("\131\001\130\002\003\130\004\005"))
 	end);
 
+	it("gwGCAgOCBAU=", function()
+		assert.are.equal("\131\001\130\002\003\130\004\005", cbor.encode(cbor.decode("\131\001\130\002\003\130\004\005")))
+	end);
+
 	it("mBkBAgMEBQYHCAkKCwwNDg8QERITFBUWFxgYGBk=", function()
 		assert.are.same({1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20;21;22;23;24;25}, cbor.decode("\152\025\001\002\003\004\005\006\a\b\t\n\v\f\r\014\015\016\017\018\019\020\021\022\023\024\024\024\025"))
+	end);
+
+	it("mBkBAgMEBQYHCAkKCwwNDg8QERITFBUWFxgYGBk=", function()
+		assert.are.equal("\152\025\001\002\003\004\005\006\a\b\t\n\v\f\r\014\015\016\017\018\019\020\021\022\023\024\024\024\025", cbor.encode(cbor.decode("\152\025\001\002\003\004\005\006\a\b\t\n\v\f\r\014\015\016\017\018\019\020\021\022\023\024\024\024\025")))
 	end);
 
 	it("oA==", function()
