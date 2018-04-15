@@ -456,4 +456,9 @@ describe("cbor.decode", function ()
 		assert.are.same({Fun=true;Amt=-2}, cbor.decode("\191cFun\245cAmt!\255"))
 	end);
 
+	it("long string", function ()
+		local str = string.rep("nödåtgärd", 100);
+		assert.are.equal(str, cbor.decode(cbor.encode(str)));
+	end);
+
 end);
