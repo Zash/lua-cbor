@@ -185,9 +185,7 @@ describe("cbor.decode", function ()
 	end);
 
 	it("undefined", function()
-		assert.has_no.errors(function ()
-			cbor.decode("\247");
-		end);
+		assert.are.equal(cbor.undefined, cbor.decode("\247"))
 	end);
 
 	it("simple(16)", function()
