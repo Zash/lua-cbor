@@ -9,7 +9,7 @@ local function softreq(pkg, field)
 end
 local dostring = function (s)
 	local ok, f = pcall(loadstring or load, s); -- luacheck: read globals loadstring
-	if ok then return f(); end
+	if ok and f then return f(); end
 end
 
 local setmetatable = setmetatable;
