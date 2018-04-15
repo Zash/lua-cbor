@@ -129,9 +129,7 @@ describe("cbor.decode", function ()
 	end);
 
 	it("Infinity", function()
-		assert.has_no.errors(function ()
-			cbor.decode("\249|\000");
-		end);
+		assert.are.same(math.huge, cbor.decode("\249|\000"))
 	end);
 
 	it("NaN", function()
@@ -147,9 +145,7 @@ describe("cbor.decode", function ()
 	end);
 
 	it("Infinity", function()
-		assert.has_no.errors(function ()
-			cbor.decode("\250\127\128\000\000");
-		end);
+		assert.are.same(math.huge, cbor.decode("\250\127\128\000\000"));
 	end);
 
 	it("NaN", function()
@@ -159,15 +155,11 @@ describe("cbor.decode", function ()
 	end);
 
 	it("-Infinity", function()
-		assert.has_no.errors(function ()
-			cbor.decode("\250\255\128\000\000");
-		end);
+		assert.are.same(-math.huge, cbor.decode("\250\255\128\000\000"));
 	end);
 
 	it("Infinity", function()
-		assert.has_no.errors(function ()
-			cbor.decode("\251\127\240\000\000\000\000\000\000");
-		end);
+		assert.are.same(math.huge, cbor.decode("\251\127\240\000\000\000\000\000\000"));
 	end);
 
 	it("NaN", function()
@@ -177,9 +169,7 @@ describe("cbor.decode", function ()
 	end);
 
 	it("-Infinity", function()
-		assert.has_no.errors(function ()
-			cbor.decode("\251\255\240\000\000\000\000\000\000");
-		end);
+		assert.are.same(-math.huge, cbor.decode("\251\255\240\000\000\000\000\000\000"));
 	end);
 
 	it("9A==", function()
