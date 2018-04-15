@@ -16,6 +16,15 @@ Lua-CBOR can be installed using [LuaRocks](https://luarocks.org/):
 
 Sources are available from <https://code.zash.se/lua-cbor/>.
 
+### Optional dependencies
+
+-   Struct library compatible with [`string.pack` and `string.unpcak`
+    from Lua 5.3](http://www.lua.org/manual/5.3/manual.html#6.4.2), such
+    as <http://www.inf.puc-rio.br/~roberto/struct/>.
+-   Bitwise operators compatible with
+    [those in LuaJIT](http://bitop.luajit.org/) or
+    [Lua 5.2](https://luarocks.org/modules/siffiejoe/bit32).
+
 API
 ---
 
