@@ -41,10 +41,10 @@ local b_rshift = softreq("bit32", "rshift") or softreq("bit", "rshift") or
 	function (a, b) return m_max(0, m_floor(a / (2 ^ b))); end;
 
 -- sanity check
-if s_pack(">I2", 0) ~= "\0\0" then
+if s_pack and s_pack(">I2", 0) ~= "\0\0" then
 	s_pack = nil;
 end
-if s_unpack(">I2", "\1\2\3\4") ~= 0x102 then
+if s_unpack and s_unpack(">I2", "\1\2\3\4") ~= 0x102 then
 	s_unpack = nil;
 end
 
