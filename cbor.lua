@@ -225,7 +225,7 @@ function encoder.table(t, opts)
 		end
 	end
 	-- the table is encoded as an array iff when we iterate over it,
-	-- we see succesive integer keys starting from 1.  The lua
+	-- we see successive integer keys starting from 1.  The lua
 	-- language doesn't actually guarantee that this will be the case
 	-- when we iterate over a table with successive integer keys, but
 	-- due an implementation detail in PUC Rio Lua, this is what we
