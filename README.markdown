@@ -4,7 +4,7 @@ Lua-CBOR
 Lua-CBOR is a (mostly) pure Lua implementation of the
 [CBOR](http://cbor.io/), a compact data serialization format,
 defined in [RFC 7049](http://tools.ietf.org/html/rfc7049).
-It supports Lua 5.1 until 5.3 and will utilize struct packing
+It supports Lua 5.1 until 5.4 and will utilize struct packing
 and bitwise operations if available.
 
 Installing
